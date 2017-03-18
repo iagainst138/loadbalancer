@@ -2,6 +2,8 @@
 
 A basic TCP loadbalancer that can use round robin, hash, and least number of connections mechanisms for proxying to backends. Can also be used for TLS termination. See the sample_configs directory for sample configs.
 
+Inspired by [https://github.com/BlueDragonX/go-proxy-example](https://github.com/BlueDragonX/go-proxy-example)
+
 
 ## Building
 

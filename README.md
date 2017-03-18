@@ -7,22 +7,22 @@ Inspired by [https://github.com/BlueDragonX/go-proxy-example](https://github.com
 
 ## Building
 
-go build -o loadbalancer config.go hash.go leastconn.go log.go main.go proxy.go roundrobin.go
+```make build```
 
 
 ## Running
 
 #### Create TLS certs
-./make-cert.sh
+```./make-cert.sh```
 
 #### Start some backends
-./create-backends.sh
+```./create-backends.sh```
 
 #### Run the loadbalancer
-./loadbalancer -config sample_configs/config.json
+```./loadbalancer -config sample_configs/config.json```
 
 #### Make a connection
-curl -v http://localhost:9090
+```curl -v http://localhost:9090```
 
 #### Make a connection using TLS
-curl -v --cacert certs/server.pem https://localhost:8080
+```curl -v --cacert certs/server.pem https://localhost:8080```

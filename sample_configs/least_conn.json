@@ -1,0 +1,19 @@
+[
+    {
+        "ListenAddr": "0.0.0.0:8083",
+        "Backends": [
+            {"addr":"localhost:7000"},
+            {"addr":"localhost:7001"},
+            {"addr":"localhost:7002"},
+            {"addr":"localhost:7003"},
+            {"addr":"localhost:7004"},
+            {"addr":"localhost:7005"},
+            {"addr":"localhost:7006"},
+            {"addr":"localhost:7007"},
+            {"addr":"localhost:7008"},
+            {"addr":"localhost:7009"},
+            {"addr":"localhost:7010"}
+        ],
+        "Backend": "LeastConn"
+    }
+]

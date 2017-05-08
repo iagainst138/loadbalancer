@@ -18,6 +18,7 @@ type Manager struct {
 	configFile     string
 	doneChan       chan bool
 	attemptingStop bool
+	signalChan     chan os.Signal
 }
 
 func NewManager(configFile string) *Manager {
@@ -25,16 +26,16 @@ func NewManager(configFile string) *Manager {
 	m := Manager{
 		configFile: configFile,
 		doneChan:   doneChan,
+		signalChan: make(chan os.Signal),
 	}
-	signalChan := make(chan os.Signal)
-	signal.Notify(signalChan, syscall.SIGINT, syscall.SIGTERM, syscall.SIGHUP, syscall.SIGWINCH)
-	go m.signalHandler(signalChan)
+	signal.Notify(m.signalChan, syscall.SIGINT, syscall.SIGTERM, syscall.SIGHUP, syscall.SIGWINCH)
+	go m.signalHandler()
 	m.reload()
 	return &m
 }
 
 func (m *Manager) reload() {
-	config, err := LoadConfig(m.configFile)
+	config, err := LoadConfig(m.configFile, m.signalChan)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -61,9 +62,9 @@ func (m *Manager) stopProxies() {
 	}
 }
 
-func (m *Manager) signalHandler(signalChan chan os.Signal) {
+func (m *Manager) signalHandler() { //signalChan chan os.Signal) {
 	for {
-		receivedSignal := <-signalChan
+		receivedSignal := <-m.signalChan
 		log.Println("received signal:", receivedSignal)
 		if receivedSignal == syscall.SIGHUP {
 			m.stopProxies()

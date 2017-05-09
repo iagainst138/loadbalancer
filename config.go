@@ -16,7 +16,7 @@ import (
 const (
 	DefaultTimeout = 2
 	DefaultType    = "tcp"
-	CheckInterval = 10
+	CheckInterval  = 10
 )
 
 type Config []*Entry
@@ -30,6 +30,8 @@ type Entry struct {
 	CertFile   string
 	KeyFile    string
 }
+
+type ReadFunc func(string) ([]byte, error)
 
 func getHTTP(url string) ([]byte, error) {
 	r, err := http.Get(url)
@@ -52,11 +54,11 @@ func getHash(b []byte) string {
 	return base64.URLEncoding.EncodeToString(hasher.Sum(nil))
 }
 
-func checkConfig(url string, original []byte, signalChan chan os.Signal) {
+func checkConfig(url string, original []byte, rf ReadFunc, signalChan chan os.Signal) {
 	hash := getHash(original)
 	for true {
 		time.Sleep(time.Second * CheckInterval)
-		data, err := getHTTP(url)
+		data, err := rf(url)
 		if err == nil {
 			if getHash(data) != hash {
 				break
@@ -69,29 +71,30 @@ func checkConfig(url string, original []byte, signalChan chan os.Signal) {
 }
 
 func LoadConfig(path string, signalChan chan os.Signal) (Config, error) {
-	c := Config{}
-	data := []byte{}
+	config := Config{}
+	var data []byte
 	var err error
+	var rf ReadFunc
 	r := regexp.MustCompile("^http[s]?://.*$")
 	if r.MatchString(path) {
-		data, err = getHTTP(path)
-		if err == nil {
-			go checkConfig(path, data, signalChan)
-		}
+		rf = getHTTP
 	} else {
-		data, err = ioutil.ReadFile(path)
+		rf = ioutil.ReadFile
 	}
 
+	if data, err = rf(path); err != nil {
+		return nil, err
+	}
+
+	// start a goroutine that checks for changes to the config
+	go checkConfig(path, data, rf, signalChan)
+
+	err = json.Unmarshal(data, &config)
 	if err != nil {
 		return nil, err
 	}
 
-	err = json.Unmarshal(data, &c)
-	if err != nil {
-		return nil, err
-	}
-
-	for _, e := range c {
+	for _, e := range config {
 		if e.Timeout == 0 {
 			e.Timeout = DefaultTimeout
 		}
@@ -104,5 +107,5 @@ func LoadConfig(path string, signalChan chan os.Signal) (Config, error) {
 		}
 	}
 
-	return c, nil
+	return config, nil
 }

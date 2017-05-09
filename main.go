@@ -62,7 +62,7 @@ func (m *Manager) stopProxies() {
 	}
 }
 
-func (m *Manager) signalHandler() { //signalChan chan os.Signal) {
+func (m *Manager) signalHandler() {
 	for {
 		receivedSignal := <-m.signalChan
 		log.Println("received signal:", receivedSignal)

@@ -24,6 +24,7 @@ Inspired by [https://github.com/BlueDragonX/go-proxy-example](https://github.com
 
 #### Run the loadbalancer
 ```./loadbalancer -config sample_configs/config.json```
+
 ```./loadbalancer -config http://localhost:8000/least_conn.json```
 
 

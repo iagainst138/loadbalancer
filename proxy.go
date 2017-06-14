@@ -2,6 +2,7 @@ package main
 
 import (
 	"crypto/tls"
+	"errors"
 	"io"
 	"log"
 	"net"
@@ -31,6 +32,15 @@ func (b *Backend) Dial(connType string, timeout time.Duration) (net.Conn, error)
 	return conn, err
 }
 
+func (b *Backend) DialUDP() (*net.UDPConn, error) {
+	addr, err := net.ResolveUDPAddr("udp", b.Addr)
+	if err != nil {
+		return nil, err
+	}
+	backend, err := net.DialUDP("udp", nil, addr)
+	return backend, err
+}
+
 // Proxy connections from Listen to Backend.
 type Proxy struct {
 	sync.Mutex
@@ -54,15 +64,20 @@ func NewProxy(entry *Entry) *Proxy {
 		Timeout:  entry.Timeout,
 	}
 
-	if entry.Backend == "RoundRobin" {
+	// UDP only supports RoundRobin
+	if entry.Type == "udp" {
 		proxy.Balancer = &RoundRobin{Backends: entry.Backends}
-	} else if entry.Backend == "Hash" {
-		proxy.Balancer = &Hash{Backends: entry.Backends}
-	} else if entry.Backend == "LeastConn" {
-		lc := NewLeastConn(proxy.Backends)
-		proxy.Balancer = lc
 	} else {
-		log.Fatal("error: upsupported backend '%s'")
+		switch entry.Backend {
+		case "RoundRobin":
+			proxy.Balancer = &RoundRobin{Backends: entry.Backends}
+		case "Hash":
+			proxy.Balancer = &Hash{Backends: entry.Backends}
+		case "LeastConn":
+			proxy.Balancer = NewLeastConn(proxy.Backends)
+		default:
+			log.Fatal("error: upsupported backend '%s'")
+		}
 	}
 
 	if entry.CertFile != "" && entry.KeyFile != "" {
@@ -80,7 +95,58 @@ func (p *Proxy) Stats() {
 	log.Println(p.Balancer.Stats())
 }
 
-func (p *Proxy) Run() error {
+func (p *Proxy) listenUDP() error {
+	listen_addr, err := net.ResolveUDPAddr("udp", p.Listen)
+	if err != nil {
+		log.Fatal(err)
+	}
+	conn, err := net.ListenUDP("udp", listen_addr)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	log.Printf("[udp] listening on %v\n", p.Listen)
+
+	for {
+		buffer := make([]byte, 4096)
+		n, addr, err := conn.ReadFrom(buffer)
+		if err != nil {
+			log.Println(err)
+			break
+		}
+
+		backend, err := p.Balancer.NextBackend(conn)
+
+		go func(bytes_read int, client_addr net.Addr) {
+			backend_conn, err := backend.DialUDP()
+			if err != nil {
+				log.Printf("error: %v\n", err)
+				return
+			}
+			backend_conn.SetReadDeadline(time.Now().Add(8 * time.Second))
+			backend_conn.SetWriteDeadline(time.Now().Add(8 * time.Second))
+			_, err = backend_conn.Write(buffer[:bytes_read]) // TODO validate the number of bytes written
+			if err != nil {
+				log.Printf("error: %v\n", err)
+				return
+			}
+			b := make([]byte, 4096)
+			r, _, err := backend_conn.ReadFrom(b)
+			if err != nil {
+				log.Println(err)
+				return
+			}
+			_, err = conn.WriteTo(b[:r], client_addr) // TODO validate the number of bytes written
+			if err != nil {
+				log.Printf("error: %v\n", err)
+			}
+		}(n, addr)
+	}
+
+	return nil
+}
+
+func (p *Proxy) listenTCP() error {
 	var err error
 
 	if p.useTls {
@@ -97,20 +163,11 @@ func (p *Proxy) Run() error {
 		return err
 	}
 
-	// NOTE to accept UDP connections
-	/*addr := net.UDPAddr{
-		Port: 8080,
-		IP: net.ParseIP("0.0.0.0"),
-	}
-	if _, err = net.ListenUDP("udp", &addr); err != nil {
-		log.Fatal(err)
-	}*/
-
 	tlsMessage := ""
 	if p.useTls {
 		tlsMessage = "[TLS " + p.CertFile + " " + p.KeyFile + "]"
 	}
-	log.Printf("listening on %s %s", p.Listen, tlsMessage)
+	log.Printf("[tcp] listening on %s %s", p.Listen, tlsMessage)
 
 	errorMessage := ""
 	wg := &sync.WaitGroup{}
@@ -139,6 +196,15 @@ func (p *Proxy) Run() error {
 	log.Println(errorMessage)
 	p.Stopped = true
 	return nil
+}
+
+func (p *Proxy) Run() error {
+	if p.Type == "udp" {
+		return p.listenUDP()
+	} else if p.Type == "tcp" {
+		return p.listenTCP()
+	}
+	return errors.New("unknown type: " + p.Type)
 }
 
 func (p *Proxy) Close() error {

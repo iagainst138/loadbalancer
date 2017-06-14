@@ -23,7 +23,10 @@ func (r *RoundRobin) NextBackend(c net.Conn) (*Backend, error) {
 }
 
 func (r *RoundRobin) Stats() string {
-	return fmt.Sprintf("\nBackends: %v\nIndex: %v\n", r.Backends, r.backendIndex)
+	r.Lock()
+	defer r.Unlock()
+	s := fmt.Sprintf("\nBackends: %v\nIndex: %v\n", r.Backends, r.backendIndex)
+	return s
 }
 
 func (r *RoundRobin) Name() string {

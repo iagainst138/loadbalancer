@@ -19,7 +19,9 @@ const (
 	CheckInterval  = 10
 )
 
-type Config []*Entry
+type Config struct {
+	Entries []*Entry
+}
 
 type Entry struct {
 	ListenAddr string
@@ -29,6 +31,7 @@ type Entry struct {
 	Backend    string
 	CertFile   string
 	KeyFile    string
+	Comment    string
 }
 
 type ReadFunc func(string) ([]byte, error)
@@ -70,7 +73,7 @@ func checkConfig(url string, original []byte, rf ReadFunc, signalChan chan os.Si
 	signalChan <- syscall.SIGHUP
 }
 
-func LoadConfig(path string, signalChan chan os.Signal) (Config, error) {
+func LoadConfig(path string, signalChan chan os.Signal) (*Config, error) {
 	config := Config{}
 	var data []byte
 	var err error
@@ -94,7 +97,7 @@ func LoadConfig(path string, signalChan chan os.Signal) (Config, error) {
 		return nil, err
 	}
 
-	for _, e := range config {
+	for _, e := range config.Entries {
 		if e.Timeout == 0 {
 			e.Timeout = DefaultTimeout
 		}
@@ -107,5 +110,5 @@ func LoadConfig(path string, signalChan chan os.Signal) (Config, error) {
 		}
 	}
 
-	return config, nil
+	return &config, nil
 }

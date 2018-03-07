@@ -1,5 +1,7 @@
 package main
 
+// TODO line 239
+
 import (
 	"crypto/tls"
 	"errors"
@@ -8,6 +10,7 @@ import (
 	"net"
 	"strings"
 	"sync"
+	"sync/atomic"
 	"time"
 )
 
@@ -23,7 +26,8 @@ type Balancer interface {
 
 // Addr is an ip:port string
 type Backend struct {
-	Addr string
+	Addr              string
+	ActiveConnections int64
 }
 
 // TODO This should be able to dial TLS also
@@ -39,6 +43,14 @@ func (b *Backend) DialUDP() (*net.UDPConn, error) {
 	}
 	backend, err := net.DialUDP("udp", nil, addr)
 	return backend, err
+}
+
+func (b *Backend) inc() {
+	atomic.AddInt64(&b.ActiveConnections, 1)
+}
+
+func (b *Backend) dec() {
+	atomic.AddInt64(&b.ActiveConnections, -1)
 }
 
 // Proxy connections from Listen to Backend.
@@ -226,6 +238,7 @@ func (p *Proxy) handle(conn net.Conn) {
 		if _, exists := blacklist[backend.Addr]; exists {
 			blacklist[backend.Addr]++
 			if blacklist[backend.Addr] > len(p.Backends) {
+				log.Println("*** breaking due to blacklist ***") // TODO review
 				break
 			}
 			attempts-- // attempt to hit all backends
@@ -233,11 +246,14 @@ func (p *Proxy) handle(conn net.Conn) {
 		}
 		backendConn, err := backend.Dial(p.Type, time.Duration(p.Timeout)*time.Second)
 		if err != nil {
+			log.Println(err)
 			blacklist[backend.Addr] = 0
 		} else {
 			//log.Printf("handling: %s -> %s [%s]", conn.RemoteAddr(), backend.Addr, conn.LocalAddr().Network())
+			backend.inc()
 			defer backendConn.Close()
 			defer p.Balancer.HandleDone(conn)
+			defer backend.dec()
 			if err := p.Pipe(conn, backendConn); err != nil {
 				log.Printf("pipe failed: %s", err)
 			}
@@ -248,31 +264,29 @@ func (p *Proxy) handle(conn net.Conn) {
 }
 
 // Copy data between two connections. Return EOF on connection close.
-func (p *Proxy) Pipe(a, b net.Conn) error {
-	done := make(chan error)
+// NOTE this is a work in progress, currently too slow...
+func (p *Proxy) Pipe(client, backend net.Conn) error {
+	done := make(chan net.Conn)
 
 	cp := func(reader, writer net.Conn) {
-		buf := make([]byte, 4096) // TODO confirm if buffer is useful
-		_, err := io.CopyBuffer(reader, writer, buf)
+		_, err := io.Copy(reader, writer)
 
-		done <- err
+		if err != nil {
+			log.Printf("*** error: %s %s", "err1", err.Error())
+		}
+		done <- reader // TODO why return this one
 	}
 
-	go cp(a, b)
-	go cp(b, a)
+	go cp(client, backend)
+	go cp(backend, client)
 
-	err1 := <-done
-	err2 := <-done
-
+	x := <-done
+	if x == client {
+		backend.Close()
+	}
 	// TODO confirm if these are necessary
-	defer a.Close()
-	defer b.Close()
+	defer client.Close()
+	defer backend.Close()
 
-	if err1 != nil {
-		log.Printf("*** error: %s %s", "err1", err1.Error())
-	}
-	if err2 != nil {
-		log.Printf("*** error: %s %s", "err2", err2.Error())
-	}
 	return nil
 }

@@ -28,7 +28,7 @@ func NewManager(configFile string) *Manager {
 		doneChan:   doneChan,
 		signalChan: make(chan os.Signal),
 	}
-	signal.Notify(m.signalChan, syscall.SIGINT, syscall.SIGTERM, syscall.SIGHUP, syscall.SIGWINCH)
+	signal.Notify(m.signalChan, syscall.SIGINT, syscall.SIGTERM, syscall.SIGHUP)
 	go m.signalHandler()
 	m.reload()
 	return &m
@@ -41,7 +41,7 @@ func (m *Manager) reload() {
 	}
 	m.proxies = nil
 	proxies := make([]*Proxy, 0)
-	for _, c := range config {
+	for _, c := range config.Entries {
 		p := NewProxy(c)
 		proxies = append(proxies, p)
 	}
@@ -82,15 +82,7 @@ func (m *Manager) signalHandler() {
 					m.doneChan <- true
 				}()
 			}
-		} else if receivedSignal == syscall.SIGWINCH {
-			m.Stats()
 		}
-	}
-}
-
-func (m *Manager) Stats() {
-	for _, p := range m.proxies {
-		p.Stats()
 	}
 }
 
@@ -111,10 +103,12 @@ func (m *Manager) Wait() bool {
 func main() {
 	configFile := ""
 	pidFile := ""
+	startHTTP := false
 
 	flags := flag.NewFlagSet(os.Args[0], flag.ExitOnError)
 	flags.StringVar(&configFile, "config", "", "config")
 	flags.StringVar(&pidFile, "pid-file", "", "write pid to this file")
+	flags.BoolVar(&startHTTP, "start-http", startHTTP, "start the HTTP server")
 	flags.Parse(os.Args[1:])
 
 	if configFile == "" {
@@ -129,6 +123,9 @@ func main() {
 	}
 
 	m := NewManager(configFile)
+	if startHTTP {
+		go m.HttpServer()
+	}
 	m.Run()
 	m.Wait()
 	log.Println("terminating")

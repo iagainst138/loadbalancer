@@ -1,51 +1,54 @@
-[
-    {
-        "ListenAddr": "0.0.0.0:8080",
-        "Backends": [
-            {"addr":"localhost:7000"},
-            {"addr":"localhost:7001"},
-            {"addr":"localhost:7002"},
-            {"addr":"localhost:7003"}
-        ],
-        "Backend": "Hash",
-        "CertFile": "certs/server.pem",
-        "KeyFile": "certs/server.key"
-    },
+{
+    "Entries":
+    [
+        {
+            "ListenAddr": "0.0.0.0:8080",
+            "Backends": [
+                {"addr":"localhost:7000"},
+                {"addr":"localhost:7001"},
+                {"addr":"localhost:7002"},
+                {"addr":"localhost:7003"}
+            ],
+            "Backend": "Hash",
+            "CertFile": "certs/server.pem",
+            "KeyFile": "certs/server.key"
+        },
 
-    {
-        "ListenAddr": "0.0.0.0:8081",
-        "Backends": [
-            {"addr":"localhost:7000"},
-            {"addr":"localhost:7001"},
-            {"addr":"localhost:7002"},
-            {"addr":"localhost:7003"},
-            {"addr":"localhost:7004"},
-            {"addr":"localhost:7005"},
-            {"addr":"localhost:7006"},
-            {"addr":"localhost:7007"},
-            {"addr":"localhost:7008"}
-        ],
-        "Backend": "LeastConn"
-    },
+        {
+            "ListenAddr": "0.0.0.0:8081",
+            "Backends": [
+                {"addr":"localhost:7000"},
+                {"addr":"localhost:7001"},
+                {"addr":"localhost:7002"},
+                {"addr":"localhost:7003"},
+                {"addr":"localhost:7004"},
+                {"addr":"localhost:7005"},
+                {"addr":"localhost:7006"},
+                {"addr":"localhost:7007"},
+                {"addr":"localhost:7008"}
+            ],
+            "Backend": "LeastConn"
+        },
 
-    {
-        "ListenAddr": "0.0.0.0:9090",
-        "timeout": 1,
-        "backends": [
-            {"addr":"localhost:7004"},
-            {"addr":"localhost:7005"},
-            {"addr":"localhost:7006"},
-            {"addr":"localhost:7007"}
-        ]
-    },
+        {
+            "ListenAddr": "0.0.0.0:9090",
+            "timeout": 1,
+            "backends": [
+                {"addr":"localhost:7004"},
+                {"addr":"localhost:7005"},
+                {"addr":"localhost:7006"},
+                {"addr":"localhost:7007"}
+            ]
+        },
 
-    {
-        "ListenAddr": "0.0.0.0:5053",
-        "Backends": [
-            {"addr":"84.200.69.80:53"},
-            {"addr":"208.67.222.222:53"},
-            {"addr":"8.8.8.8:53"}
-        ],
-        "Type": "udp"
-    }
-]
+        {
+            "ListenAddr": "0.0.0.0:5053",
+            "Backends": [
+                {"addr":"84.200.69.80:53"},
+                {"addr":"208.67.222.222:53"},
+                {"addr":"8.8.8.8:53"}
+            ],
+            "Type": "udp"
+        }
+    ]
+}

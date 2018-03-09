@@ -253,8 +253,8 @@ func (p *Proxy) handle(conn net.Conn) {
 			defer backendConn.Close()
 			defer p.Balancer.HandleDone(conn)
 			defer backend.dec()
-			if e1, e2 := p.Pipe(conn, backendConn); e1 != nil || e2 != nil {
-				log.Printf("pipe failed:\n%v\n%v\n", e1, e2)
+			if cError, bError := p.Pipe(conn, backendConn); cError != nil || bError != nil {
+				log.Printf("pipe failed:\n%v\n%v\n", cError, bError)
 			}
 			return // exit the attempt loop
 		}

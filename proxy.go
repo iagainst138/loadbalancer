@@ -249,13 +249,12 @@ func (p *Proxy) handle(conn net.Conn) {
 			log.Println(err)
 			blacklist[backend.Addr] = 0
 		} else {
-			//log.Printf("handling: %s -> %s [%s]", conn.RemoteAddr(), backend.Addr, conn.LocalAddr().Network())
 			backend.inc()
 			defer backendConn.Close()
 			defer p.Balancer.HandleDone(conn)
 			defer backend.dec()
-			if err := p.Pipe(conn, backendConn); err != nil {
-				log.Printf("pipe failed: %s", err)
+			if e1, e2 := p.Pipe(conn, backendConn); e1 != nil || e2 != nil {
+				log.Printf("pipe failed:\n%v\n%v\n", e1, e2)
 			}
 			return // exit the attempt loop
 		}
@@ -263,30 +262,39 @@ func (p *Proxy) handle(conn net.Conn) {
 	logRed("failed to reach a running backend")
 }
 
-// Copy data between two connections. Return EOF on connection close.
-// NOTE this is a work in progress, currently too slow...
-func (p *Proxy) Pipe(client, backend net.Conn) error {
-	done := make(chan net.Conn)
-
-	cp := func(reader, writer net.Conn) {
-		_, err := io.Copy(reader, writer)
-
-		if err != nil {
-			log.Printf("*** error: %s %s", "err1", err.Error())
-		}
-		done <- reader // TODO why return this one
-	}
-
-	go cp(client, backend)
-	go cp(backend, client)
-
-	x := <-done
-	if x == client {
-		backend.Close()
-	}
-	// TODO confirm if these are necessary
+func (p *Proxy) Pipe(client, backend net.Conn) (error, error) {
 	defer client.Close()
 	defer backend.Close()
 
-	return nil
+	var clientCopyError error
+	var backendCopyError error
+	var clientCopied int64
+	var backendCopied int64
+	clientOK := false
+
+	var wg sync.WaitGroup
+	wg.Add(2)
+
+	// copy client data to backend
+	go func() {
+		defer backend.Close()
+		defer wg.Done()
+		if clientCopied, clientCopyError = io.Copy(backend, client); clientCopyError == nil {
+			// client has closed connection so we mark it as ok
+			clientOK = true
+		}
+	}()
+
+	// copy backend data to client
+	go func() {
+		defer client.Close()
+		defer wg.Done()
+		backendCopied, backendCopyError = io.Copy(client, backend)
+		if clientOK {
+			backendCopyError = nil
+		}
+	}()
+
+	wg.Wait()
+	return clientCopyError, backendCopyError
 }

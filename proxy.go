@@ -57,6 +57,7 @@ func (b *Backend) dec() {
 type Proxy struct {
 	sync.Mutex
 	listener net.Listener
+	udpConn  *net.UDPConn
 	Listen   string
 	Type     string
 	Backends []*Backend
@@ -116,6 +117,7 @@ func (p *Proxy) listenUDP() error {
 	if err != nil {
 		log.Fatal(err)
 	}
+	p.udpConn = conn
 
 	log.Printf("[udp] listening on %v\n", p.Listen)
 
@@ -135,8 +137,7 @@ func (p *Proxy) listenUDP() error {
 				log.Printf("error: %v\n", err)
 				return
 			}
-			backend_conn.SetReadDeadline(time.Now().Add(8 * time.Second))
-			backend_conn.SetWriteDeadline(time.Now().Add(8 * time.Second))
+			defer backend_conn.Close()
 			_, err = backend_conn.Write(buffer[:bytes_read]) // TODO validate the number of bytes written
 			if err != nil {
 				log.Printf("error: %v\n", err)
@@ -188,7 +189,7 @@ func (p *Proxy) listenTCP() error {
 			wg.Add(1)
 			go func(nc net.Conn) {
 				defer wg.Done()
-				p.handle(nc)
+				p.handleTCP(nc)
 			}(conn)
 		} else {
 			// NOTE this is reached when Close() is called on net.Listener
@@ -220,10 +221,15 @@ func (p *Proxy) Run() error {
 }
 
 func (p *Proxy) Close() error {
-	return p.listener.Close()
+	if p.listener != nil {
+		return p.listener.Close()
+	} else if p.udpConn != nil {
+		return p.udpConn.Close()
+	}
+	return nil
 }
 
-func (p *Proxy) handle(conn net.Conn) {
+func (p *Proxy) handleTCP(conn net.Conn) {
 	defer conn.Close()
 	p.Balancer.HandleStarted(conn)
 

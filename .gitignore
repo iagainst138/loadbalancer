@@ -2,3 +2,6 @@ _scratch
 *.swp
 certs
 loadbalancer
+pkg/*
+builds/*
+coverage/*

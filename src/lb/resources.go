@@ -1,4 +1,4 @@
-package main
+package lb
 
 var Index string = `<html>
 <head>

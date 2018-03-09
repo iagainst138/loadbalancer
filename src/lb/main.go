@@ -1,14 +1,11 @@
-package main
+package lb
 
 // inspired by https://github.com/BlueDragonX/go-proxy-example
 
 import (
-	"flag"
-	"io/ioutil"
 	"log"
 	"os"
 	"os/signal"
-	"strconv"
 	"syscall"
 	"time"
 )
@@ -100,7 +97,7 @@ func (m *Manager) Wait() bool {
 	return <-m.doneChan
 }
 
-func main() {
+/*func main() {
 	configFile := ""
 	pidFile := ""
 	startHTTP := false
@@ -129,4 +126,4 @@ func main() {
 	m.Run()
 	m.Wait()
 	log.Println("terminating")
-}
+}*/

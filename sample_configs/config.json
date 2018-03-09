@@ -2,7 +2,7 @@
     "Entries":
     [
         {
-            "ListenAddr": "0.0.0.0:8080",
+            "ListenAddr": "0.0.0.0:8443",
             "Backends": [
                 {"addr":"localhost:7000"},
                 {"addr":"localhost:7001"},

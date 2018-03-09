@@ -9,7 +9,7 @@ The loadbalancers config is specified with the '-config' option and can be a pat
 
 ## Building
 
-```make build```
+```./build.sh```
 
 
 ## Running
@@ -23,16 +23,16 @@ The loadbalancers config is specified with the '-config' option and can be a pat
 
 
 #### Run the loadbalancer
-```./loadbalancer -config sample_configs/config.json```
+```./builds/linux/lb-0.1 -config sample_configs/config.json```
 or
-```./loadbalancer -config http://localhost:8000/config.json```
+```./builds/linux/lb-0.1 -config http://localhost:8000/config.json```
 
 
 #### Make a connection
-```curl -v http://localhost:9090```
+```curl http://localhost:9090```
 or for UDP
-```dig @127.0.0.1 -p 5353 google.com```
+```dig @127.0.0.1 -p 5053 google.com```
 
 
 #### Make a connection using TLS
-```curl -v --cacert certs/server.pem https://localhost:8080```
+```curl -v --cacert certs/server.pem https://localhost:8443```

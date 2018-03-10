@@ -25,6 +25,8 @@ rm -rf ${BUILD_DIR}
 
 SET_GOPATH
 
+go run src/lb/cmd/generate.go
+
 for PLATFORM in ${BUILD_TARGETS}; do
     OUT=lb-${VERSION}
     [ ${PLATFORM} == "windows" ] && OUT=${OUT}.exe

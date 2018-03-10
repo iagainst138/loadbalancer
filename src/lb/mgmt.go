@@ -10,6 +10,7 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
+	"strings"
 	"syscall"
 	"time"
 )
@@ -123,15 +124,32 @@ func (m *Manager) HttpServer() {
 			return
 		}
 
+		w.Header().Set("Cache-Control", "no-cache, no-store, must-revalidate")
+		w.Header().Set("Pragma", "no-cache")
+		w.Header().Set("Expires", "0")
+
+		// set a custom header to identify the service
+		w.Header().Set("Server", fmt.Sprintf("lb, version %v", Version))
+
 		switch r.URL.Path {
 		case "/":
-			fmt.Fprintf(w, Index)
+			index, err := GetResource("resources/index.html")
+			if err != nil {
+				http.Error(w, "Error", http.StatusInternalServerError)
+			} else {
+				w.Write(index)
+			}
 		case "/stats":
+			w.Header().Set("Content-Type", "application/json")
 			fmt.Fprintf(w, m.Stats())
 		case "/config":
 			fmt.Fprintf(w, m.DumpConfig())
 		default:
-			fmt.Fprintf(w, "default response...\n")
+			if strings.HasPrefix(r.URL.Path, "/static/") {
+				ServeResource(w, r)
+			} else {
+				http.NotFound(w, r)
+			}
 		}
 	})
 

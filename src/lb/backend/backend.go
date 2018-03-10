@@ -25,14 +25,16 @@ func (b *Backend) Listen() {
 
 func (b *Backend) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 	sleep := 0
-	if b.Sleep && rand.Intn(20) > 15 {
+	if req.URL.Path == "/sleep" {
+		sleep = 10
+	} else if b.Sleep && rand.Intn(20) > 15 {
 		sleep = rand.Intn(10)
 		if sleep == 1 {
 			log.Printf("%v: dropping connection", b.Port)
 			return
 		}
-		time.Sleep(time.Duration(sleep) * time.Second)
 	}
+	time.Sleep(time.Duration(sleep) * time.Second)
 	w.Write([]byte(fmt.Sprintf("port: %v (sleep %v)\n", b.Port, sleep)))
 }
 

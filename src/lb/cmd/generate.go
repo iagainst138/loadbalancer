@@ -63,7 +63,7 @@ func main() {
 	t, err := template.ParseFiles("src/lb/templates/resources")
 	check(err)
 
-	f, err := os.Create("src/lb/r.go")
+	f, err := os.Create("src/lb/resources.go")
 	check(err)
 	check(t.Execute(f, v))
 }

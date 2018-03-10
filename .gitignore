@@ -6,3 +6,4 @@ pkg/*
 builds/*
 coverage/*
 backends
+src/lb/resources.go

@@ -143,6 +143,7 @@ func (m *Manager) HttpServer() {
 			w.Header().Set("Content-Type", "application/json")
 			fmt.Fprintf(w, m.Stats())
 		case "/config":
+			w.Header().Set("Content-Type", "application/json")
 			fmt.Fprintf(w, m.DumpConfig())
 		default:
 			if strings.HasPrefix(r.URL.Path, "/static/") {

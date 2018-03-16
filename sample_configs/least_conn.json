@@ -4,17 +4,17 @@
         {
             "ListenAddr": "0.0.0.0:8083",
             "Backends": [
-                {"addr":"localhost:7000"},
-                {"addr":"localhost:7001"},
-                {"addr":"localhost:7002"},
-                {"addr":"localhost:7003"},
-                {"addr":"localhost:7004"},
-                {"addr":"localhost:7005"},
-                {"addr":"localhost:7006"},
-                {"addr":"localhost:7007"},
-                {"addr":"localhost:7008"},
-                {"addr":"localhost:7009"},
-                {"addr":"localhost:7010"}
+                {"addr":"127.0.0.1:7000"},
+                {"addr":"127.0.0.1:7001"},
+                {"addr":"127.0.0.1:7002"},
+                {"addr":"127.0.0.1:7003"},
+                {"addr":"127.0.0.1:7004"},
+                {"addr":"127.0.0.1:7005"},
+                {"addr":"127.0.0.1:7006"},
+                {"addr":"127.0.0.1:7007"},
+                {"addr":"127.0.0.1:7008"},
+                {"addr":"127.0.0.1:7009"},
+                {"addr":"127.0.0.1:7010"}
             ],
             "Backend": "LeastConn"
         }

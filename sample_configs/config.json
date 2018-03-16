@@ -4,10 +4,10 @@
         {
             "ListenAddr": "0.0.0.0:8443",
             "Backends": [
-                {"addr":"localhost:7000"},
-                {"addr":"localhost:7001"},
-                {"addr":"localhost:7002"},
-                {"addr":"localhost:7003"}
+                {"addr":"127.0.0.1:7000"},
+                {"addr":"127.0.0.1:7001"},
+                {"addr":"127.0.0.1:7002"},
+                {"addr":"127.0.0.1:7003"}
             ],
             "Backend": "Hash",
             "CertFile": "certs/server.pem",
@@ -17,15 +17,15 @@
         {
             "ListenAddr": "0.0.0.0:8081",
             "Backends": [
-                {"addr":"localhost:7000"},
-                {"addr":"localhost:7001"},
-                {"addr":"localhost:7002"},
-                {"addr":"localhost:7003"},
-                {"addr":"localhost:7004"},
-                {"addr":"localhost:7005"},
-                {"addr":"localhost:7006"},
-                {"addr":"localhost:7007"},
-                {"addr":"localhost:7008"}
+                {"addr":"127.0.0.1:7000"},
+                {"addr":"127.0.0.1:7001"},
+                {"addr":"127.0.0.1:7002"},
+                {"addr":"127.0.0.1:7003"},
+                {"addr":"127.0.0.1:7004"},
+                {"addr":"127.0.0.1:7005"},
+                {"addr":"127.0.0.1:7006"},
+                {"addr":"127.0.0.1:7007"},
+                {"addr":"127.0.0.1:7008"}
             ],
             "Backend": "LeastConn"
         },
@@ -34,10 +34,10 @@
             "ListenAddr": "0.0.0.0:9090",
             "timeout": 1,
             "backends": [
-                {"addr":"localhost:7004"},
-                {"addr":"localhost:7005"},
-                {"addr":"localhost:7006"},
-                {"addr":"localhost:7007"}
+                {"addr":"127.0.0.1:7004"},
+                {"addr":"127.0.0.1:7005"},
+                {"addr":"127.0.0.1:7006"},
+                {"addr":"127.0.0.1:7007"}
             ]
         },
 

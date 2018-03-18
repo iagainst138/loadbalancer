@@ -10,6 +10,7 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
+	"sort"
 	"strings"
 	"syscall"
 	"time"
@@ -21,8 +22,16 @@ const (
 	HTTPListenAddr = ":4444"
 )
 
+type Proxies []*Proxy
+
+func (p Proxies) Len() int      { return len(p) }
+func (p Proxies) Swap(i, j int) { p[i], p[j] = p[j], p[i] }
+func (p Proxies) Less(i, j int) bool {
+	return p[i].Type+p[i].Listen < p[j].Type+p[j].Listen
+}
+
 type Manager struct {
-	proxies        []*Proxy
+	proxies        Proxies
 	configFile     string
 	doneChan       chan bool
 	attemptingStop bool
@@ -163,15 +172,8 @@ func (m *Manager) DumpConfig() string {
 }
 
 func (m *Manager) Stats() string {
-	/*s := Stat {
-		Proxies: m.proxies,
-	}*/
-	b := make(map[string][]*Backend)
-	for _, p := range m.proxies {
-		//fmt.Println(p)
-		b[p.Listen] = p.Backends
-	}
-	return dumpJSON(b)
+	sort.Sort(m.proxies)
+	return dumpJSON(m.proxies)
 }
 
 // TODO handle error

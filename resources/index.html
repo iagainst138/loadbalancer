@@ -12,8 +12,24 @@ body {
 	font-family: Inconsolata, Courier;
 }
 
-#stats h4 {
+#stats {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+}
+
+#stats h4,hr {
 	margin: 2px;
+}
+
+.box {
+    min-width: 300px;
+    max-width: 600px;
+    border: 1px solid lightgray;
+    padding: 4px;
+    margin-bottom: 10px;
+    border-radius: 2px;
+
 }
 
 </style>
@@ -23,22 +39,19 @@ body {
 <h1>LB</h1>
 <p><a href="/config">View Config</a></p>
 <p><a href="/stats">Raw Stats</a></p>
-<div id="stats">
-</div>
+<h3>Stats:</h3>
+<div id="stats"> </div>
 </div>
 
 <script>
 function update_stats() {
 	$.get("stats", function(r) {
-		var stats = "<h3>Stats:</h3>";
-		for (var key in r) {
-			if (r.hasOwnProperty(key)) {
-                stats += "<h4>"+key+"</h4>";
-				var backends = r[key];
-				for(var i=0;i<backends.length;i++)
-					stats += backends[i].Addr+" "+backends[i].ActiveConnections+"</br>";
-				stats += "</br>";
-			}
+        var stats = "";
+        for(var i=0;i<r.length;i++) {
+            stats += "<div class='box'><h4>"+r[i].Listen+"</h4><div>Type:"+r[i].Type+"</div><hr>";
+            for(var j=0;j<r[i].Backends.length;j++)
+                stats += r[i].Backends[j].Addr+" "+r[i].Backends[j].ActiveConnections+"</br>";
+            stats += "</div>";
 		}
 
 		$("#stats").html(stats);

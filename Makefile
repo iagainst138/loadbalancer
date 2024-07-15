@@ -9,7 +9,7 @@ build_backend: certs
 	(cd lb && go build ./cmd/backend/)
 
 
-build_lb:
+build_lb: certs
 	(cd lb && go build -o lb-main ./cmd/lb/)
 
 

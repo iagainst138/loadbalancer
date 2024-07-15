@@ -88,9 +88,9 @@ func (m *Manager) signalHandler() {
 			m.reload()
 			m.Run()
 		} else if receivedSignal == syscall.SIGTERM || receivedSignal == syscall.SIGINT {
-			log.Println("attempting to stop: pid = ", os.Getpid())
+			log.Printf("attempting to stop: pid = %d", os.Getpid())
 			if m.attemptingStop { // useful if connections enter a CLOSE_WAIT state
-				log.Println("forcing stop: pid = ", os.Getpid())
+				log.Printf("forcing stop: pid = %d", os.Getpid())
 				os.Exit(1)
 			} else {
 				go func() {

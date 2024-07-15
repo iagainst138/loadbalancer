@@ -39,8 +39,6 @@ func (b *Backend) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 }
 
 func main() {
-	rand.Seed(time.Now().UnixNano())
-
 	sleep := false
 	addr := "127.0.0.1"
 
@@ -65,8 +63,8 @@ func main() {
 	var wg sync.WaitGroup
 
 	for _, port := range backendPorts {
+		wg.Add(1)
 		go func(p string) {
-			wg.Add(1)
 			b := Backend{Addr: addr, Port: p, Sleep: sleep}
 			b.Listen()
 			wg.Done()

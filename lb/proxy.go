@@ -7,6 +7,7 @@ import (
 	"errors"
 	"io"
 	"log"
+	"log/slog"
 	"net"
 	"strings"
 	"sync"
@@ -259,6 +260,7 @@ func (p *Proxy) handleTCP(conn net.Conn) {
 			defer backendConn.Close()
 			defer p.Balancer.HandleDone(conn)
 			defer backend.dec()
+			//p.PipeY(conn, backendConn)
 			if cError, bError := p.Pipe(conn, backendConn); cError != nil || bError != nil {
 				log.Printf("pipe failed:\n%v\n%v\n", cError, bError)
 			}
@@ -296,11 +298,22 @@ func (p *Proxy) Pipe(client, backend net.Conn) (error, error) {
 		defer client.Close()
 		defer wg.Done()
 		backendCopied, backendCopyError = io.Copy(client, backend)
-		if clientOK {
-			backendCopyError = nil
-		}
 	}()
 
 	wg.Wait()
+
+	slog.Debug("copy",
+		"clientCopied", clientCopied,
+		"backendCopied", backendCopied,
+		"clientError", clientCopyError,
+		"backendError", backendCopyError,
+		"clientOK", clientOK,
+	)
+
+	if clientOK {
+		// we ignore errors on the backend if the client has closed the connection
+		backendCopyError = nil
+	}
+
 	return clientCopyError, backendCopyError
 }

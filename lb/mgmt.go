@@ -7,6 +7,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
+	"log/slog"
 	"net/http"
 	"os"
 	"os/signal"
@@ -16,7 +17,7 @@ import (
 	"time"
 )
 
-const (
+var (
 	User           = "admin"
 	Password       = "admin"
 	HTTPListenAddr = ":4444"
@@ -163,6 +164,7 @@ func (m *Manager) HttpServer() {
 		}
 	})
 
+	slog.Info("manager", "addr", HTTPListenAddr)
 	log.Fatal(http.ListenAndServe(HTTPListenAddr, nil))
 }
 

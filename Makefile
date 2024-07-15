@@ -9,8 +9,13 @@ build_backend: certs
 	(cd lb && go build ./cmd/backend/)
 
 
-build_lb: certs
+build_lb: certs generate
 	(cd lb && go build -o lb-main ./cmd/lb/)
+
+
+generate:
+	(cd lb && go build -o generate ./cmd/generate.go)
+	./lb/generate
 
 
 run_backends: build_backend
@@ -18,7 +23,7 @@ run_backends: build_backend
 
 
 run_lb: build_lb
-	./lb/lb-main -config sample_configs/config.json
+	./lb/lb-main -config sample_configs/config.json -start-http -server-addr 127.0.0.1:9444
 
 
 clean:

@@ -5,18 +5,12 @@ import (
 	"flag"
 	"fmt"
 	"io/ioutil"
+	"log"
 	"os"
 	"path/filepath"
 	"strings"
 	"text/template"
 )
-
-func check(err error) {
-	if err != nil {
-		fmt.Printf("error: %v\n", err)
-		os.Exit(1)
-	}
-}
 
 // Vars holds variables needed for the resources template
 type Vars struct {
@@ -32,9 +26,11 @@ func GenFileList(file string) (map[string]string, error) {
 		}
 		filepath.Walk(f, func(path string, info os.FileInfo, err error) error {
 			if !info.IsDir() {
-				fmt.Printf("adding '%v' to resources\n", path)
-				b, e := ioutil.ReadFile(path)
-				check(e)
+				log.Printf("adding '%v' to resources\n", path)
+				b, err := ioutil.ReadFile(path)
+				if err != nil {
+					log.Fatalf("error: %s", err)
+				}
 				files[strings.Replace(path, "\\", "/", -1)] = base64.StdEncoding.EncodeToString(b)
 			}
 			return nil
@@ -44,26 +40,31 @@ func GenFileList(file string) (map[string]string, error) {
 }
 
 func main() {
-	dir, _ := os.Getwd()
-	fmt.Println("working dir:", dir)
-
 	resourceFiles := "resources,static"
 
 	flag.StringVar(&resourceFiles, "resources", resourceFiles, "comma separated list of files to add")
 	flag.Parse()
 
 	files, err := GenFileList(resourceFiles)
-	check(err)
+	if err != nil {
+		log.Fatalf("error: %s", err)
+	}
 
 	v := Vars{
 		Files:   files,
 		DevMode: os.Getenv("LB_DEV_MODE") == "1",
 	}
 
-	t, err := template.ParseFiles("src/lb/templates/resources")
-	check(err)
+	t, err := template.ParseFiles("lb/templates/resources")
+	if err != nil {
+		log.Fatalf("error: %s", err)
+	}
 
-	f, err := os.Create("src/lb/resources.go")
-	check(err)
-	check(t.Execute(f, v))
+	f, err := os.Create("lb/resources.go")
+	if err != nil {
+		log.Fatalf("error: %s", err)
+	}
+	if err := (t.Execute(f, v)); err != nil {
+		log.Fatalf("error: %s", err)
+	}
 }

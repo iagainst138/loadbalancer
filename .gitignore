@@ -6,7 +6,6 @@ pkg/*
 builds/*
 coverage/*
 backends
-lb/resources.go
 lb/backend
 lb/generate
 lb/lb-main

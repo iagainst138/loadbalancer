@@ -9,13 +9,8 @@ build_backend: certs
 	(cd lb && go build ./cmd/backend/)
 
 
-build_lb: certs generate
+build_lb: certs
 	(cd lb && go build -o lb-main ./cmd/lb/)
-
-
-generate:
-	(cd lb && go build -o generate ./cmd/generate.go)
-	./lb/generate
 
 
 run_backends: build_backend
@@ -27,7 +22,7 @@ run_lb: build_lb
 
 
 clean:
-	rm -rf certs lb/backend
+	rm -rf certs lb/backend lb/lb-main
 
 
 test_client:

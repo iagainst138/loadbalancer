@@ -5,6 +5,7 @@ package lb
 import (
 	"crypto/tls"
 	"errors"
+	"fmt"
 	"io"
 	"log"
 	"log/slog"
@@ -70,7 +71,11 @@ type Proxy struct {
 	useTls   bool
 }
 
-func NewProxy(entry *Entry) *Proxy {
+func NewProxy(entry *Entry) (*Proxy, error) {
+	if entry == nil {
+		return nil, errors.New("nil Entry")
+	}
+
 	proxy := Proxy{
 		Listen:   entry.ListenAddr,
 		Backends: entry.Backends,
@@ -90,7 +95,7 @@ func NewProxy(entry *Entry) *Proxy {
 		case "LeastConn":
 			proxy.Balancer = NewLeastConn(proxy.Backends)
 		default:
-			log.Fatal("error: upsupported backend '%s'")
+			return nil, fmt.Errorf("error: upsupported backend %q", entry.Backend)
 		}
 	}
 
@@ -99,7 +104,7 @@ func NewProxy(entry *Entry) *Proxy {
 		proxy.CertFile = entry.CertFile
 		proxy.KeyFile = entry.KeyFile
 	}
-	return &proxy
+	return &proxy, nil
 }
 
 // TODO improve this output

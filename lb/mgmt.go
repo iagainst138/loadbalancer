@@ -59,9 +59,13 @@ func (m *Manager) reload() {
 	}
 	m.proxies = nil
 	proxies := make([]*Proxy, 0)
-	for _, c := range config.Entries {
-		p := NewProxy(c)
-		proxies = append(proxies, p)
+	for _, entry := range config.Entries {
+		p, err := NewProxy(entry)
+		if err != nil {
+			slog.Error("call to NewProxy failed", "error", err, "entry", entry)
+		} else {
+			proxies = append(proxies, p)
+		}
 	}
 	m.proxies = proxies
 }

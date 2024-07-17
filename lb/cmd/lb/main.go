@@ -4,6 +4,7 @@ import (
 	"flag"
 	"io/ioutil"
 	"log"
+	"log/slog"
 	"os"
 	"strconv"
 
@@ -33,7 +34,13 @@ func main() {
 		log.Printf("pid [%v] written to %v", os.Getpid(), pidFile)
 	}
 
-	m := lb.NewManager(configFile)
+	m, err := lb.NewManager(configFile)
+
+	if err != nil {
+		slog.Error("failed to start", "error", err)
+		os.Exit(1)
+	}
+
 	if startHTTP {
 		go m.HttpServer()
 	}

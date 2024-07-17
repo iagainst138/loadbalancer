@@ -3,7 +3,6 @@ package lb
 import (
 	"crypto/sha1"
 	"encoding/base64"
-	"encoding/json"
 	"io/ioutil"
 	"log"
 	"net/http"
@@ -11,6 +10,8 @@ import (
 	"regexp"
 	"syscall"
 	"time"
+
+	"github.com/ghodss/yaml"
 )
 
 const (
@@ -92,7 +93,7 @@ func LoadConfig(path string, signalChan chan os.Signal) (*Config, error) {
 	// start a goroutine that checks for changes to the config
 	go checkConfig(path, data, rf, signalChan)
 
-	err = json.Unmarshal(data, &config)
+	err = yaml.Unmarshal(data, &config)
 	if err != nil {
 		return nil, err
 	}

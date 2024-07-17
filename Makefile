@@ -21,7 +21,7 @@ run_backends: build_backend
 
 
 run_lb: build_lb
-	./lb/lb-main -config sample_configs/config.json -start-http -server-addr 127.0.0.1:9444
+	./lb/lb-main -config sample_configs/config.yml -start-http -server-addr 127.0.0.1:9444
 
 
 clean:

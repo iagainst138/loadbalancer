@@ -9,7 +9,7 @@ func TestNewManager(t *testing.T) {
 		configFile  string
 	}{
 		{"empty config path", true, ""},
-		{"valid config", false, "../sample_configs/config.json"},
+		{"valid config", false, "../sample_configs/config.yml"},
 	}
 
 	for _, tc := range testCases {

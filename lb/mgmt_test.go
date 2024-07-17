@@ -2,20 +2,19 @@ package lb
 
 import "testing"
 
-func TestNewProxy(t *testing.T) {
+func TestNewManager(t *testing.T) {
 	testCases := []struct {
 		name        string
 		shouldError bool
-		entry       *Entry
+		configFile  string
 	}{
-		{"nil entry", true, nil},
-		{"bad backend", true, &Entry{Backend: "__bad__"}},
-		{"good backend", false, &Entry{Backend: "RoundRobin"}},
+		{"empty config path", true, ""},
+		{"valid config", false, "../sample_configs/config.json"},
 	}
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			_, err := NewProxy(tc.entry)
+			_, err := NewManager(tc.configFile)
 			if !tc.shouldError && err != nil {
 				t.Fatal(err)
 			} else if tc.shouldError && err == nil {

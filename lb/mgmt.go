@@ -5,6 +5,7 @@ package lb
 import (
 	"bytes"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"log"
 	"log/slog"
@@ -39,23 +40,31 @@ type Manager struct {
 	signalChan     chan os.Signal
 }
 
-func NewManager(configFile string) *Manager {
+func NewManager(configFile string) (*Manager, error) {
 	doneChan := make(chan bool)
 	m := Manager{
 		configFile: configFile,
 		doneChan:   doneChan,
 		signalChan: make(chan os.Signal),
 	}
+
+	if err := m.reload(); err != nil {
+		return nil, err
+	}
+
 	signal.Notify(m.signalChan, syscall.SIGINT, syscall.SIGTERM, syscall.SIGHUP)
 	go m.signalHandler()
-	m.reload()
-	return &m
+
+	return &m, nil
 }
 
-func (m *Manager) reload() {
+func (m *Manager) reload() error {
+	var errored bool
+
 	config, err := LoadConfig(m.configFile, m.signalChan)
 	if err != nil {
-		log.Fatal(err)
+		slog.Error("failed to load config", "error", err)
+		return err
 	}
 	m.proxies = nil
 	proxies := make([]*Proxy, 0)
@@ -63,11 +72,19 @@ func (m *Manager) reload() {
 		p, err := NewProxy(entry)
 		if err != nil {
 			slog.Error("call to NewProxy failed", "error", err, "entry", entry)
+			errored = true
 		} else {
 			proxies = append(proxies, p)
 		}
 	}
+
+	if errored {
+		return errors.New("failed to load proxies")
+	}
+
 	m.proxies = proxies
+
+	return nil
 }
 
 func (m *Manager) stopProxies() {

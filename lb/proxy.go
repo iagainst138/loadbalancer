@@ -162,6 +162,7 @@ func (p *Proxy) listenUDP() error {
 		}(n, addr)
 	}
 
+	p.Stopped = true
 	return nil
 }
 

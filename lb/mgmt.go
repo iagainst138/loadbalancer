@@ -96,6 +96,7 @@ func (m *Manager) stopProxies() {
 			// TODO handle open connections
 			for !p.Stopped {
 				time.Sleep(2 * time.Millisecond)
+				slog.Debug("waiting on proxy to stop", "type", p.Type, "listen", p.Listen)
 			}
 		}
 	}
